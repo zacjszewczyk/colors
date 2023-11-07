@@ -17,10 +17,13 @@ if __name__ == "__main__":
         print("Error: nb_to_script.py requiures a Jupyter notebook as an input file.")
         sys.exit(1)
 
-    # Clear the output file
+    # Clear the output script
     open("output.py", "w").close()
     script_fd = open("output.py", "a")
-
+    
+    # Write the shebang statement
+    script_fd.write("#!/usr/bin/python3\n\n")
+    
     # Open the notebook file
     notebook_fd = open(file_path, "r")
 
@@ -29,7 +32,12 @@ if __name__ == "__main__":
 
     # Iterate through the cells
     for cell in content["cells"]:
-        print(cell)
+        if (cell["cell_type"] == "markdown"):
+            script_fd.write("# ".join(cell["source"]))
+            script_fd.write("\n")
+        if (cell["cell_type"] == "code"):
+            script_fd.write("".join(cell["source"]))
+            script_fd.write("\n\n")
 
     # Close the files
     script_fd.close()
