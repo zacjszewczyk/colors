@@ -22,7 +22,7 @@ def validate_file_extension(file_path, extension):
     no error.
     """
     if not file_path.endswith(extension):
-        raise ValueError(f"File must end with {extension}")
+        raise ValueError(f"Error: {file_path} must end with {extension}.")
 
 # Checking if the script is the main program and not being imported
 if __name__ == "__main__":
