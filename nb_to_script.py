@@ -24,9 +24,12 @@ if __name__ == "__main__":
     # Open the notebook file
     notebook_fd = open(file_path, "r")
 
+    # Load the notebook
     content = json.loads(notebook_fd.read())
 
-    print(content["cells"])
+    # Iterate through the cells
+    for cell in content["cells"]:
+        print(cell)
 
     # Close the files
     script_fd.close()
