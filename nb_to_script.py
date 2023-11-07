@@ -3,29 +3,53 @@
 # Imports
 import sys
 import json
+import argparse
+
+# Function to validate the file extension
+def validate_file_extension(file_path, extension):
+    """
+    Validate that the provided file has the specified extension.
+
+    This function performs a basic check to ensure that the file identified
+    by "file_path" has the required file extension "extension".
+    
+    Parameters:
+    file_path (string): Path to the target file.
+    extension (string): Required filename extension
+
+    Returns:
+    Raises ValueError if file path does not end in extension. Otherwise,
+    no error.
+    """
+    if not file_path.endswith(extension):
+        raise ValueError(f"File must end with {extension}")
 
 # Checking if the script is the main program and not being imported
 if __name__ == "__main__":
-    # Basic input checking for required number of parameters 
-    if len(sys.argv) != 2:
-        print("Usage: python3 nb_to_script.py <file_path>")
-        sys.exit(1)
-    
-    # Basic input checking for required file path extension
-    file_path = sys.argv[1]
-    if (".ipynb" not in file_path):
-        print("Error: nb_to_script.py requiures a Jupyter notebook as an input file.")
+    # Setup the argparse module
+    parser = argparse.ArgumentParser(description="Convert .ipynb file to .py file.")
+    parser.add_argument("input_file", help="Input file path (must end with .ipynb)")
+    parser.add_argument("output_file", help="Output file path (must end with .py)")
+
+    args = parser.parse_args()
+
+    # Validate file extensions
+    try:
+        validate_file_extension(args.input_file, ".ipynb")
+        validate_file_extension(args.output_file, ".py")
+    except ValueError as e:
+        print(e)
         sys.exit(1)
 
     # Clear the output script
-    open("output.py", "w").close()
-    script_fd = open("output.py", "a")
+    open(args.output_file, "w").close()
+    script_fd = open(args.output_file, "a")
     
     # Write the shebang statement
     script_fd.write("#!/usr/bin/python3\n\n")
     
     # Open the notebook file
-    notebook_fd = open(file_path, "r")
+    notebook_fd = open(args.input_file, "r")
 
     # Load the notebook
     content = json.loads(notebook_fd.read())
