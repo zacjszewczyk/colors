@@ -1,4 +1,4 @@
-# Color Picker
+# Colors
 
 This repository helps to generate large sets of attractive and accessible color schemes based on Matthew Strom's work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors).
 
