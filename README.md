@@ -15,7 +15,7 @@ This repository helps to generate large sets of attractive and accessible color 
 
 This project is, in many cases, a direct NodeJS-to-Python port of Matthew Strom's fascinating work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors) from June 3rd, 2022. I have made minor improvements in certain areas, however, and this repository currently does not include the changes he made in 2023.
 
-`target_colors` is an array of colors in hexadecimal format. If set and then used to initialize `start_colors`, the script will attempt to find colors that are similar to these. `pallette_size` tells the script how many colors to return, and should match the number of colors in `target_colors` if set. Alternately, you may also choose starting colors at random; the script will then adjust those according to the criteria outlined below, courtesy of Matthew's README.
+`target_colors` is an array of colors in hexadecimal format. If set and then used to initialize `start_colors`, the script will attempt to find colors that are similar to these. `palette_size` tells the script how many colors to return, and should match the number of colors in `target_colors` if set. Alternately, you may also choose starting colors at random; the script will then adjust those according to the criteria outlined below, courtesy of Matthew's README.
 
 `energy_weight`, `range_weight`, `target_weight`, `protanopia_weight`, `deuteranopia_weight`, and `tritanopia_weight` can be any floating point number and are set in the `cost` function. They adjust the relative impact of each factor in the algorithm's decisionmaking:
 
@@ -46,7 +46,8 @@ To use this notebook, download it, open it in a Jupyter environment, and run all
 ./colors
 |_ README.md # This file.
 |
-|_ colors.ipynb # Color pallette generator.
+|_ colors.ipynb # Color palette generator.
+|_ colors.py # Color palette generator as a script.
 |
 |_ makefile # Project makefile
 |_ LICENSE.md # Project license.

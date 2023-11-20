@@ -792,13 +792,13 @@ target_colors = [
     "#ED6804",
     "#B3063D"
 ]
-# pallette_size = 3
-# start_colors = [hex_to_rgb(c) for c in random_n_from_array(target_colors, pallette_size)]
+# palette_size = 3
+# start_colors = [hex_to_rgb(c) for c in random_n_from_array(target_colors, palette_size)]
 
-pallette_size = 8
-start_colors = [random_rgb_color() for _ in range(pallette_size)]
+palette_size = 8
+start_colors = [random_rgb_color() for _ in range(palette_size)]
 
-# pallette_size = 3
+# palette_size = 3
 # start_colors = [(0,0,0), (0,0,0), (0,0,0)]
 
 start_cost = cost(start_colors)
@@ -806,7 +806,7 @@ start_cost = cost(start_colors)
 print("Start colors:", start_colors)
 print("Start cost:", start_cost)
 
-end_colors = optimize(pallette_size, start_colors)
+end_colors = optimize(palette_size, start_colors)
 end_cost = cost(end_colors)
 
 print("End colors:", end_colors)
