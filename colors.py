@@ -771,7 +771,7 @@ def optimize(n=5, input_colors=[]):
             if (new_color_cost < old_color_cost):
                 colors[i] = new_colors[i]
         
-        print(f"\r[Run #{idx}] Current cost: {cost(colors)}", end="")
+        print(f"[Run #{idx}] Current cost: {cost(colors)}", end="\r")
 
         # Decrease temperature
         temperature *= cooling_rate
