@@ -1,6 +1,6 @@
 # Color Picker
 
-This repository helps to generate large sets of attractive and accessible color schemes based on Mathew Strom's work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors).
+This repository helps to generate large sets of attractive and accessible color schemes based on Matthew Strom's work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors).
 
 ## Table of Contents
 
@@ -13,9 +13,9 @@ This repository helps to generate large sets of attractive and accessible color 
 
 ## Description
 
-This code is, in many cases, a direct NodeJS-to-Python port of Mathew Strom's work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors). I have made minor improvements in certain areas.
+This project is, in many cases, a direct NodeJS-to-Python port of Matthew Strom's fascinating work in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors). I have made minor improvements in certain areas.
 
-`target_colors` is an array of colors in hexadecimal format. If set, the script will attempt to find colors that are similar to these. `pallette_size` tells the script how many colors to return, and should match the number of colors in `target_colors` if set.
+`target_colors` is an array of colors in hexadecimal format. If set and then used to initialize `start_colors`, the script will attempt to find colors that are similar to these. `pallette_size` tells the script how many colors to return, and should match the number of colors in `target_colors` if set. Alternately, you may also choose starting colors at random; the script will then adjust those according to the criteria outlined below, courtesy of Matthew's README.
 
 `energy_weight`, `range_weight`, `target_weight`, `protanopia_weight`, `deuteranopia_weight`, and `tritanopia_weight` can be any floating point number and are set in the `cost` function. They adjust the relative impact of each factor in the algorithm's decisionmaking:
 
@@ -54,7 +54,7 @@ To use this notebook, download it, open it in a Jupyter environment, and run all
 
 ## Background and Motivation
 
-Mathew Strom made a good case for this project in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors), so I won't belabor the point here.
+Matthew Strom made a good case for this project in [*How to pick the least wrong colors*](https://matthewstrom.com/writing/how-to-pick-the-least-wrong-colors), so I won't belabor the point here.
 
 ## License
 
