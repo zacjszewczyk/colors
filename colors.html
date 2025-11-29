@@ -408,7 +408,12 @@
             if (n < 0 || n > array.length) {
                 throw new Error("Invalid value of 'n'.");
             }
-            const shuffled = [...array].sort(() => 0.5 - Math.random());
+            // Fisher-Yates shuffle for proper uniform random selection
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
             return shuffled.slice(0, n);
         }
         
@@ -489,7 +494,7 @@
             if (value < 0.0031308) {
                 return Math.floor(0.5 + value * 12.92 * 255);
             }
-            return Math.floor(0 + 255 * (Math.pow(value, 1.0 / 2.4) * 1.055 - 0.055));
+            return Math.floor(0.5 + 255 * (Math.pow(value, 1.0 / 2.4) * 1.055 - 0.055));
         }
         
         function linearRgbFromSrgb(value) {
