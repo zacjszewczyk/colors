@@ -338,8 +338,8 @@
             <button class="btn btn-secondary" onclick="addTargetColor()">+ Add Color</button>
         </div>
         
-        <h3>Optimization Weights</h3>
-        <div class="weight-group">
+        <h3 id="optimizationWeightsHeader">Optimization Weights</h3>
+        <div class="weight-group" id="optimizationWeightsGroup">
             <div class="weight-input">
                 <label for="energyWeight">Energy Weight</label>
                 <input type="number" id="energyWeight" value="1" step="0.1" min="0">
@@ -372,8 +372,8 @@
             </div>
         </div>
         
-        <h3>Algorithm Parameters</h3>
-        <div class="weight-group">
+        <h3 id="algorithmParamsHeader">Algorithm Parameters</h3>
+        <div class="weight-group" id="algorithmParamsGroup">
             <div class="weight-input">
                 <label for="temperature">Initial Temperature</label>
                 <input type="number" id="temperature" value="1000" step="100" min="1">
@@ -1082,6 +1082,15 @@
         // Section 8: Complementary Color Functions
         // ============================================
         
+        // Constants for color generation
+        const MAX_HEX_COLOR = 0xFFFFFF;
+        const SAT_VARIATION_STEP = 5;
+        const SAT_VARIATION_MOD = 15;
+        const SAT_VARIATION_OFFSET = 7;
+        const LIGHT_VARIATION_STEP = 3;
+        const LIGHT_VARIATION_MOD = 10;
+        const LIGHT_VARIATION_OFFSET = 5;
+        
         let baseColorsArray = ['#3498DB'];
         
         function rgbToHsl(rgb) {
@@ -1100,10 +1109,13 @@
                 const d = max - min;
                 s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
                 
-                switch (max) {
-                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-                    case g: h = ((b - r) / d + 2) / 6; break;
-                    case b: h = ((r - g) / d + 4) / 6; break;
+                // Use if-else instead of switch to avoid floating point equality issues
+                if (max === r) {
+                    h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                } else if (max === g) {
+                    h = ((b - r) / d + 2) / 6;
+                } else {
+                    h = ((r - g) / d + 4) / 6;
                 }
             }
             
@@ -1199,8 +1211,8 @@
                 
                 hues.forEach((hue, index) => {
                     // Vary saturation and lightness slightly for visual interest
-                    const satVariation = (index * 5) % 15 - 7;
-                    const lightVariation = (index * 3) % 10 - 5;
+                    const satVariation = (index * SAT_VARIATION_STEP) % SAT_VARIATION_MOD - SAT_VARIATION_OFFSET;
+                    const lightVariation = (index * LIGHT_VARIATION_STEP) % LIGHT_VARIATION_MOD - LIGHT_VARIATION_OFFSET;
                     
                     const newSat = Math.max(20, Math.min(100, baseSaturation + satVariation));
                     const newLight = Math.max(25, Math.min(75, baseLightness + lightVariation));
@@ -1241,7 +1253,7 @@
         }
         
         function addBaseColor() {
-            baseColorsArray.push('#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0').toUpperCase());
+            baseColorsArray.push('#' + Math.floor(Math.random() * MAX_HEX_COLOR).toString(16).padStart(6, '0').toUpperCase());
             renderBaseColors();
         }
         
@@ -1292,11 +1304,11 @@
             const paletteModeInfo = document.getElementById('paletteModeInfo');
             const targetColorsSection = document.getElementById('targetColorsSection');
             
-            // Get optimization weight sections
-            const optimizationWeightsH3 = document.querySelector('h3');
-            const weightGroup = document.querySelector('.weight-group');
-            const algorithmH3 = document.querySelectorAll('h3')[1];
-            const algorithmGroup = document.querySelectorAll('.weight-group')[1];
+            // Get optimization weight sections by ID
+            const optimizationWeightsH3 = document.getElementById('optimizationWeightsHeader');
+            const weightGroup = document.getElementById('optimizationWeightsGroup');
+            const algorithmH3 = document.getElementById('algorithmParamsHeader');
+            const algorithmGroup = document.getElementById('algorithmParamsGroup');
             
             if (mode === 'disparate') {
                 disparateOptions.classList.remove('hidden');
