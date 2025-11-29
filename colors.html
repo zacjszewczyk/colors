@@ -273,16 +273,63 @@
         <h2>Configuration</h2>
         
         <div class="form-group">
-            <label for="paletteSize">Palette Size (number of colors)</label>
-            <input type="number" id="paletteSize" value="5" min="2" max="12">
+            <label for="paletteMode">Palette Mode</label>
+            <select id="paletteMode">
+                <option value="disparate">Disparate (Maximally Different)</option>
+                <option value="complementary">Complementary (Harmonious)</option>
+            </select>
+            <span class="info-text" id="paletteModeInfo">Generate colors that are maximally different from each other</span>
         </div>
         
-        <div class="form-group">
-            <label for="initMethod">Initialization Method</label>
-            <select id="initMethod">
-                <option value="random">Random Colors</option>
-                <option value="target">From Target Colors</option>
-            </select>
+        <div id="disparateOptions">
+            <div class="form-group">
+                <label for="paletteSize">Palette Size (number of colors)</label>
+                <input type="number" id="paletteSize" value="5" min="2" max="12">
+            </div>
+            
+            <div class="form-group">
+                <label for="initMethod">Initialization Method</label>
+                <select id="initMethod">
+                    <option value="random">Random Colors</option>
+                    <option value="target">From Target Colors</option>
+                </select>
+            </div>
+        </div>
+        
+        <div id="complementaryOptions" class="hidden">
+            <div class="form-group">
+                <label for="colorSchemeType">Color Scheme Type</label>
+                <select id="colorSchemeType">
+                    <option value="complementary">Complementary (2 colors)</option>
+                    <option value="analogous">Analogous (3 colors)</option>
+                    <option value="triadic">Triadic (3 colors)</option>
+                    <option value="split-complementary">Split-Complementary (3 colors)</option>
+                    <option value="tetradic">Tetradic/Square (4 colors)</option>
+                    <option value="custom">Custom (specify count)</option>
+                </select>
+                <span class="info-text" id="schemeTypeInfo">Two colors opposite on the color wheel</span>
+            </div>
+            
+            <div class="form-group hidden" id="customColorCountSection">
+                <label for="customColorCount">Number of Complementary Colors</label>
+                <input type="number" id="customColorCount" value="5" min="2" max="12">
+                <span class="info-text">Colors will be evenly distributed around the color wheel</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="complementaryInitMethod">Base Color Method</label>
+                <select id="complementaryInitMethod">
+                    <option value="random">Random Base Color</option>
+                    <option value="input">From Input Color(s)</option>
+                </select>
+            </div>
+            
+            <div class="form-group hidden" id="baseColorSection">
+                <label>Base Color (click to edit)</label>
+                <div id="baseColorsContainer" class="target-colors-container"></div>
+                <button class="btn btn-secondary" onclick="addBaseColor()">+ Add Base Color</button>
+                <span class="info-text">Complementary colors will be generated based on these colors</span>
+            </div>
         </div>
         
         <div class="form-group" id="targetColorsSection">
@@ -291,8 +338,8 @@
             <button class="btn btn-secondary" onclick="addTargetColor()">+ Add Color</button>
         </div>
         
-        <h3>Optimization Weights</h3>
-        <div class="weight-group">
+        <h3 id="optimizationWeightsHeader">Optimization Weights</h3>
+        <div class="weight-group" id="optimizationWeightsGroup">
             <div class="weight-input">
                 <label for="energyWeight">Energy Weight</label>
                 <input type="number" id="energyWeight" value="1" step="0.1" min="0">
@@ -325,8 +372,8 @@
             </div>
         </div>
         
-        <h3>Algorithm Parameters</h3>
-        <div class="weight-group">
+        <h3 id="algorithmParamsHeader">Algorithm Parameters</h3>
+        <div class="weight-group" id="algorithmParamsGroup">
             <div class="weight-input">
                 <label for="temperature">Initial Temperature</label>
                 <input type="number" id="temperature" value="1000" step="100" min="1">
@@ -343,7 +390,8 @@
         
         <div class="buttons" style="margin-top: 20px;">
             <button class="btn btn-primary" id="optimizeBtn" onclick="startOptimization()">🚀 Optimize Colors</button>
-            <button class="btn btn-secondary" onclick="generateRandomColors()">🎲 Generate Random</button>
+            <button class="btn btn-secondary" id="generateRandomBtn" onclick="generateRandomColors()">🎲 Generate Random</button>
+            <button class="btn btn-primary hidden" id="generateComplementaryBtn" onclick="generateComplementaryColors()">🎨 Generate Complementary</button>
         </div>
     </div>
     
@@ -1030,9 +1078,307 @@
             document.getElementById('optimizeBtn').disabled = false;
         }
         
+        // ============================================
+        // Section 8: Complementary Color Functions
+        // ============================================
+        
+        // Constants for color generation
+        const MAX_HEX_COLOR = 0xFFFFFF;
+        const SAT_VARIATION_STEP = 5;
+        const SAT_VARIATION_MOD = 15;
+        const SAT_VARIATION_OFFSET = 7;
+        const LIGHT_VARIATION_STEP = 3;
+        const LIGHT_VARIATION_MOD = 10;
+        const LIGHT_VARIATION_OFFSET = 5;
+        
+        let baseColorsArray = ['#3498DB'];
+        
+        function rgbToHsl(rgb) {
+            const r = rgb[0] / 255;
+            const g = rgb[1] / 255;
+            const b = rgb[2] / 255;
+            
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s;
+            const l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                
+                // Use if-else instead of switch to avoid floating point equality issues
+                if (max === r) {
+                    h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                } else if (max === g) {
+                    h = ((b - r) / d + 2) / 6;
+                } else {
+                    h = ((r - g) / d + 4) / 6;
+                }
+            }
+            
+            return [h * 360, s * 100, l * 100];
+        }
+        
+        function hslToRgb(hsl) {
+            const h = hsl[0] / 360;
+            const s = hsl[1] / 100;
+            const l = hsl[2] / 100;
+            
+            let r, g, b;
+            
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            
+            return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+        }
+        
+        function getComplementaryHues(baseHue, schemeType, customCount = 5) {
+            let hues = [baseHue];
+            
+            switch (schemeType) {
+                case 'complementary':
+                    // Opposite on color wheel (180°)
+                    hues.push((baseHue + 180) % 360);
+                    break;
+                    
+                case 'analogous':
+                    // Adjacent colors (30° apart)
+                    hues.push((baseHue + 30) % 360);
+                    hues.push((baseHue - 30 + 360) % 360);
+                    break;
+                    
+                case 'triadic':
+                    // Three colors evenly spaced (120° apart)
+                    hues.push((baseHue + 120) % 360);
+                    hues.push((baseHue + 240) % 360);
+                    break;
+                    
+                case 'split-complementary':
+                    // Base + two colors adjacent to complement
+                    hues.push((baseHue + 150) % 360);
+                    hues.push((baseHue + 210) % 360);
+                    break;
+                    
+                case 'tetradic':
+                    // Four colors in rectangle pattern (90° apart)
+                    hues.push((baseHue + 90) % 360);
+                    hues.push((baseHue + 180) % 360);
+                    hues.push((baseHue + 270) % 360);
+                    break;
+                    
+                case 'custom':
+                    // Evenly distributed around the wheel
+                    const step = 360 / customCount;
+                    for (let i = 1; i < customCount; i++) {
+                        hues.push((baseHue + step * i) % 360);
+                    }
+                    break;
+            }
+            
+            return hues;
+        }
+        
+        function generateComplementaryPalette(baseColors, schemeType, customCount = 5) {
+            const palette = [];
+            
+            baseColors.forEach(baseColor => {
+                const rgb = typeof baseColor === 'string' ? hexToRgb(baseColor) : baseColor;
+                const hsl = rgbToHsl(rgb);
+                const baseHue = hsl[0];
+                const baseSaturation = hsl[1];
+                const baseLightness = hsl[2];
+                
+                const hues = getComplementaryHues(baseHue, schemeType, customCount);
+                
+                hues.forEach((hue, index) => {
+                    // Vary saturation and lightness slightly for visual interest
+                    const satVariation = (index * SAT_VARIATION_STEP) % SAT_VARIATION_MOD - SAT_VARIATION_OFFSET;
+                    const lightVariation = (index * LIGHT_VARIATION_STEP) % LIGHT_VARIATION_MOD - LIGHT_VARIATION_OFFSET;
+                    
+                    const newSat = Math.max(20, Math.min(100, baseSaturation + satVariation));
+                    const newLight = Math.max(25, Math.min(75, baseLightness + lightVariation));
+                    
+                    palette.push(hslToRgb([hue, newSat, newLight]));
+                });
+            });
+            
+            return palette;
+        }
+        
+        function renderBaseColors() {
+            const container = document.getElementById('baseColorsContainer');
+            container.innerHTML = '';
+            
+            baseColorsArray.forEach((color, index) => {
+                const div = document.createElement('div');
+                div.className = 'target-color-input';
+                div.innerHTML = `
+                    <input type="color" value="${color}" onchange="updateBaseColor(${index}, this.value)">
+                    <input type="text" value="${color}" onchange="updateBaseColorFromText(${index}, this.value)">
+                    <button class="btn btn-secondary" style="padding: 5px 10px;" onclick="removeBaseColor(${index})">×</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function updateBaseColor(index, value) {
+            baseColorsArray[index] = value.toUpperCase();
+            renderBaseColors();
+        }
+        
+        function updateBaseColorFromText(index, value) {
+            if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                baseColorsArray[index] = value.toUpperCase();
+                renderBaseColors();
+            }
+        }
+        
+        function addBaseColor() {
+            baseColorsArray.push('#' + Math.floor(Math.random() * MAX_HEX_COLOR).toString(16).padStart(6, '0').toUpperCase());
+            renderBaseColors();
+        }
+        
+        function removeBaseColor(index) {
+            if (baseColorsArray.length > 1) {
+                baseColorsArray.splice(index, 1);
+                renderBaseColors();
+            }
+        }
+        
+        function generateComplementaryColors() {
+            const schemeType = document.getElementById('colorSchemeType').value;
+            const initMethod = document.getElementById('complementaryInitMethod').value;
+            const customCount = parseInt(document.getElementById('customColorCount').value);
+            
+            let baseColors;
+            if (initMethod === 'random') {
+                // Generate a random base color
+                baseColors = [rgbToHex(randomRgbColor())];
+            } else {
+                baseColors = baseColorsArray;
+            }
+            
+            const palette = generateComplementaryPalette(baseColors, schemeType, customCount);
+            
+            startColorsArray = baseColors.map(c => typeof c === 'string' ? hexToRgb(c) : c);
+            endColorsArray = palette;
+            
+            renderColorBoxes(startColorsArray, 'startColors');
+            renderColorBoxes(endColorsArray, 'endColors');
+            
+            // Update stats display for complementary mode
+            document.getElementById('startCost').textContent = '-';
+            document.getElementById('currentCost').textContent = '-';
+            document.getElementById('improvement').textContent = '-';
+            document.getElementById('iterations').textContent = '-';
+            document.getElementById('progressBarFill').style.width = '100%';
+            document.getElementById('progressText').textContent = `Generated ${palette.length} complementary colors`;
+        }
+        
+        function updatePaletteModeUI() {
+            const mode = document.getElementById('paletteMode').value;
+            const disparateOptions = document.getElementById('disparateOptions');
+            const complementaryOptions = document.getElementById('complementaryOptions');
+            const optimizeBtn = document.getElementById('optimizeBtn');
+            const generateRandomBtn = document.getElementById('generateRandomBtn');
+            const generateComplementaryBtn = document.getElementById('generateComplementaryBtn');
+            const paletteModeInfo = document.getElementById('paletteModeInfo');
+            const targetColorsSection = document.getElementById('targetColorsSection');
+            
+            // Get optimization weight sections by ID
+            const optimizationWeightsH3 = document.getElementById('optimizationWeightsHeader');
+            const weightGroup = document.getElementById('optimizationWeightsGroup');
+            const algorithmH3 = document.getElementById('algorithmParamsHeader');
+            const algorithmGroup = document.getElementById('algorithmParamsGroup');
+            
+            if (mode === 'disparate') {
+                disparateOptions.classList.remove('hidden');
+                complementaryOptions.classList.add('hidden');
+                optimizeBtn.classList.remove('hidden');
+                generateRandomBtn.classList.remove('hidden');
+                generateComplementaryBtn.classList.add('hidden');
+                paletteModeInfo.textContent = 'Generate colors that are maximally different from each other';
+                targetColorsSection.style.display = 'block';
+                
+                // Show optimization options
+                if (optimizationWeightsH3) optimizationWeightsH3.style.display = '';
+                if (weightGroup) weightGroup.style.display = '';
+                if (algorithmH3) algorithmH3.style.display = '';
+                if (algorithmGroup) algorithmGroup.style.display = '';
+            } else {
+                disparateOptions.classList.add('hidden');
+                complementaryOptions.classList.remove('hidden');
+                optimizeBtn.classList.add('hidden');
+                generateRandomBtn.classList.add('hidden');
+                generateComplementaryBtn.classList.remove('hidden');
+                paletteModeInfo.textContent = 'Generate harmonious colors based on color theory';
+                targetColorsSection.style.display = 'none';
+                
+                // Hide optimization options (not needed for complementary)
+                if (optimizationWeightsH3) optimizationWeightsH3.style.display = 'none';
+                if (weightGroup) weightGroup.style.display = 'none';
+                if (algorithmH3) algorithmH3.style.display = 'none';
+                if (algorithmGroup) algorithmGroup.style.display = 'none';
+            }
+        }
+        
+        function updateSchemeTypeUI() {
+            const schemeType = document.getElementById('colorSchemeType').value;
+            const customCountSection = document.getElementById('customColorCountSection');
+            const schemeTypeInfo = document.getElementById('schemeTypeInfo');
+            
+            const descriptions = {
+                'complementary': 'Two colors opposite on the color wheel',
+                'analogous': 'Three colors adjacent on the color wheel',
+                'triadic': 'Three colors evenly spaced (120° apart)',
+                'split-complementary': 'Base color plus two colors adjacent to its complement',
+                'tetradic': 'Four colors forming a rectangle on the color wheel',
+                'custom': 'Colors evenly distributed around the color wheel'
+            };
+            
+            schemeTypeInfo.textContent = descriptions[schemeType] || '';
+            
+            if (schemeType === 'custom') {
+                customCountSection.classList.remove('hidden');
+            } else {
+                customCountSection.classList.add('hidden');
+            }
+        }
+        
+        function updateComplementaryInitMethodUI() {
+            const initMethod = document.getElementById('complementaryInitMethod').value;
+            const baseColorSection = document.getElementById('baseColorSection');
+            
+            if (initMethod === 'input') {
+                baseColorSection.classList.remove('hidden');
+            } else {
+                baseColorSection.classList.add('hidden');
+            }
+        }
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             renderTargetColors();
+            renderBaseColors();
             generateRandomColors();
             
             // Show/hide target colors section based on init method
@@ -1040,6 +1386,20 @@
                 document.getElementById('targetColorsSection').style.display = 
                     e.target.value === 'target' ? 'block' : 'none';
             });
+            
+            // Palette mode change handler
+            document.getElementById('paletteMode').addEventListener('change', updatePaletteModeUI);
+            
+            // Scheme type change handler
+            document.getElementById('colorSchemeType').addEventListener('change', updateSchemeTypeUI);
+            
+            // Complementary init method change handler
+            document.getElementById('complementaryInitMethod').addEventListener('change', updateComplementaryInitMethodUI);
+            
+            // Initialize UI state
+            updatePaletteModeUI();
+            updateSchemeTypeUI();
+            updateComplementaryInitMethodUI();
         });
     </script>
 </body>
